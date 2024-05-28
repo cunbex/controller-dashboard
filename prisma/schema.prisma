@@ -1,0 +1,52 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Controller {
+  id        String    @id @unique
+  active    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  topics    String
+  userId    String?
+  password  String    @default("0000")
+  User      User?     @relation(fields: [userId], references: [id])
+  Devices   Devices[]
+}
+
+model Devices {
+  uuid               String      @id @unique
+  controllerId       String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime
+  CharacteristicName String      @default("")
+  deviceName         String      @default("")
+  Controller         Controller? @relation(fields: [controllerId], references: [id])
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model User {
+  id         String       @id @unique
+  email      String       @unique
+  name       String
+  password   String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  picture    String
+  Controller Controller[]
+}
