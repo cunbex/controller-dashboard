@@ -27,7 +27,7 @@ const subscribeTopic = async (client) => {
     client.subscribe(
         [
             `${process.env.CONTROLLER_ID}/cmd/#`,
-            `${process.env.CONTROLLER_ID}/lwt/#`,
+            `${process.env.CONTROLLER_ID}/lwt/`,
             `${process.env.CONTROLLER_ID}/vlr/#`,
         ],
         {

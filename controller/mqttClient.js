@@ -28,7 +28,7 @@ const options = {
     ca,
 };
 
-function getClient() {
+async function getClient() {
     if (!client) {
         client = mqtt.connect(brokerUrl, options);
 

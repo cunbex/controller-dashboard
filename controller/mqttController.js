@@ -1,10 +1,10 @@
 const asyncHandler = require('express-async-handler');
-const { getClient } = require('./mqttClient');
 const { subscribeTopic } = require('./mqttPubSub');
+const { getClient } = require('./mqttClient');
 
 // Init MQTT connection
 exports.mqttConnect = asyncHandler(async (req, res, next) => {
-    const client = getClient(process.env.CONTROLLER_ID);
+    const client = await getClient(process.env.CONTROLLER_ID);
     client.on('close', () => {
         req.mqtt = false;
         console.log('Disconnected...');
@@ -15,7 +15,7 @@ exports.mqttConnect = asyncHandler(async (req, res, next) => {
 });
 
 exports.mqttEvents = asyncHandler(async (req, res, next) => {
-    const client = getClient(process.env.CONTROLLER_ID);
+    const client = await getClient(process.env.CONTROLLER_ID);
     // Message Event handlers
     if (req.mqtt === true) {
         client.on('message', (topic, message) => {

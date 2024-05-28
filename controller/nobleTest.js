@@ -231,23 +231,22 @@ const { getClient } = require('./mqttClient');
 const { publishMessage } = require('./mqttPubSub');
 // Publish MQTT message
 exports.nobleTest = asyncHandler(async (req, res, next) => {
-    const client = getClient(process.env.CONTROLLER_ID);
+    const client = await getClient(process.env.CONTROLLER_ID);
     const data1 = {
         controller: process.env.CONTROLLER_ID,
         type: 'vlr',
         device: 'capteurGaz',
-        characteristics: { consommationGaz: 19 },
+        characteristics: { consommationGaz: 28 },
     };
     const data2 = {
         controller: process.env.CONTROLLER_ID,
         type: 'cmd',
         device: 'capteurGaz',
-        characteristics: { status: 'On' },
+        characteristics: { status: 'off' },
     };
-    /*
     if (req.mqtt === true) {
         publishMessage(client, 'vlr', 'capteurGaz', data1);
         publishMessage(client, 'cmd', 'capteurGaz', data2);
-    } */
+    }
     next();
 });
