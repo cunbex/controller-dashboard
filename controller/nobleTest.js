@@ -1,64 +1,57 @@
 const noble = require('@abandonware/noble');
 
 const devicesToConnect = [];
-function startScan() {
-    return new Promise((resolve, reject) => {
-        console.log('Scanning for BLE devices...');
-        noble.on('stateChange', (state) => {
-            if (state === 'poweredOn') {
-                console.log('Bluetooth is active, starting scan...');
-                noble.startScanning();
-                setTimeout(() => {
-                    console.log('Scan finished.');
-                    noble.stopScanning();
-                }, 4000);
-            } else {
-                console.log('Bluetooth is not active');
+exports.startScan = () => {
+    noble.on('stateChange', (state) => {
+        if (state === 'poweredOn') {
+            console.log('Bluetooth is active, starting scan...');
+            noble.startScanning();
+            setTimeout(() => {
+                console.log('Scan finished.');
                 noble.stopScanning();
-                reject('Bluetooth is not active');
-            }
-        });
-        noble.on('discover', (peripheral) => {
-            if (peripheral.advertisement.localName !== undefined) {
-                console.log('Peripheral found:');
-                console.log(
-                    `  Local Name: ${peripheral.advertisement.localName}`,
-                );
-                console.log(`UUID: ${peripheral.uuid}`);
-                console.log(`MAC Address: ${peripheral.address}`);
-                console.log(
-                    `Service UUIDs: ${peripheral.advertisement.serviceUuids}`,
-                );
-                console.log();
-
-                devicesToConnect.push({
-                    peripheral,
-                    Local_Name: peripheral.advertisement.localName,
-                    isConnected: false,
-                });
-            }
-        });
-        noble.on('scanStop', () => {
-            if (devicesToConnect.length === 0) {
-                console.log('No BLE devices found.');
-                reject('No BLE devices found.');
-            } else {
-                console.log('Found devices:');
-                devicesToConnect.forEach((device, index) => {
-                    console.log(
-                        `${index}: ${device.Local_Name} (${device.peripheral.address})`,
-                    ); // hna bch tchof li deviceeee li
-                });
-                resolve(devicesToConnect);
-            }
-        });
-
-        noble.on('error', (err) => {
-            console.error('Error occurred:', err);
-            reject(err);
-        });
+            }, 4000);
+        } else {
+            console.log('Bluetooth is not active');
+            noble.stopScanning();
+            return 'Bluetooth is not active';
+        }
     });
-}
+    noble.on('discover', (peripheral) => {
+        console.log('Scanning for BLE devices...');
+        if (peripheral.advertisement.localName !== undefined) {
+            console.log('Peripheral found:');
+            console.log(`Local Name: ${peripheral.advertisement.localName}`);
+            console.log(`UUID: ${peripheral.uuid}`);
+            console.log(`MAC Address: ${peripheral.address}`);
+            console.log(
+                `Service UUIDs: ${peripheral.advertisement.serviceUuids}`,
+            );
+            devicesToConnect.push({
+                peripheral,
+                Local_Name: peripheral.advertisement.localName,
+                isConnected: false,
+            });
+        }
+    });
+    noble.on('scanStop', () => {
+        if (devicesToConnect.length === 0) {
+            console.log('No BLE devices found.');
+            return 'No BLE devices found.';
+        }
+        console.log('Found devices:');
+        devicesToConnect.forEach((device, index) => {
+            console.log(
+                `${index}: ${device.Local_Name} (${device.peripheral.address})`,
+            ); // hna bch tchof li deviceeee li
+        });
+        return devicesToConnect;
+    });
+
+    noble.on('error', (err) => {
+        console.error('Error occurred:', err);
+        return err;
+    });
+};
 
 /* hadi function drtHa balak tsa3dk bch tala3 lel dashbooooord           
 
@@ -214,17 +207,6 @@ function writeCharacteristic(characteristic, value) {
     });
 }
 */
-// hnaaaaa ndiro l'appel t3 function scan
-startScan()
-    .then((devicesToConnect) => {
-        console.log('Scan completed. Devices to connect:', devicesToConnect);
-        connectToDevice(0); // hna nda5lo index t3 appreilllle li ra7 n connectiwlha
-        // Connect premier device fl cas hadi
-    })
-
-    .catch((error) => {
-        console.error('Error:', error);
-    });
 
 /*
 const asyncHandler = require('express-async-handler');

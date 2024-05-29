@@ -4,6 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const expressLayouts = require('express-ejs-layouts');
+const session = require('express-session');
 
 require('dotenv').config();
 const errorHandler = require('./middleware/errorHandler');
@@ -13,6 +14,7 @@ const { nobleTest } = require('./controller/nobleTest');
 
 // import routes
 const indexRouter = require('./routes/index');
+const postRouter = require('./routes/post');
 
 const app = express();
 
@@ -28,9 +30,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+        cookie: { secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 },
+    }),
+);
+
 // Dynamic routes
-app.use(mqttConnect, mqttEvents, nobleTest);
+app.use(mqttConnect, mqttEvents);
 app.use('/', indexRouter);
+app.use('/api', postRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
