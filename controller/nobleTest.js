@@ -226,6 +226,7 @@ startScan()
         console.error('Error:', error);
     });
 
+/*
 const asyncHandler = require('express-async-handler');
 const { getClient } = require('./mqttClient');
 const { publishMessage } = require('./mqttPubSub');
@@ -250,3 +251,4 @@ exports.nobleTest = asyncHandler(async (req, res, next) => {
     }
     next();
 });
+*/
