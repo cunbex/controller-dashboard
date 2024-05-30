@@ -1,5 +1,6 @@
 const mqtt = require('mqtt');
 const fs = require('fs');
+const { writeCharacteristic } = require('./nobleTest');
 
 // MQTT broker URL
 const brokerUrl = process.env.BROKER_URL;
@@ -39,13 +40,68 @@ async function getClient() {
         client.on('reconnect', () => {
             console.log('Reconnecting...');
         });
+        client.on('close', () => {
+            console.log('Disconnected...');
+        });
         client.on('error', (err) => {
             console.error('MQTT client error:', err);
         });
+        client.on('message', (topic, message) => {
+            console.log(`Received: ${message.toString()}`);
+            /* writeCharacteristic(JSON.parse(message.toString())); */
+        });
+        await subscribeTopic();
     }
     return client;
 }
 
+const publishOptions = {
+    qos: 1,
+    retain: true,
+    dup: false,
+};
+const subscribeOptions = {
+    qos: 0,
+};
+
+const publishMessage = async (type, device, value) => {
+    client.publish(
+        `${process.env.CONTROLLER_ID}/${type}/${device}`,
+        JSON.stringify(value),
+        publishOptions,
+        (err) => {
+            if (err) {
+                console.error('Error Publishing to topic:', err);
+            } else {
+                console.log(
+                    `Published to: ${process.env.CONTROLLER_ID}/${type}/${device}`,
+                );
+            }
+        },
+    );
+};
+const subscribeTopic = async () => {
+    client.subscribe(
+        [
+            `${process.env.CONTROLLER_ID}/cmd/#`,
+            `${process.env.CONTROLLER_ID}/lwt/`,
+            `${process.env.CONTROLLER_ID}/vlr/#`,
+        ],
+        {
+            subscribeOptions,
+        },
+        (err, granted) => {
+            if (err) {
+                console.error('Error subscribing to topic:', err);
+            } else if (granted) {
+                console.log(`Subscribed to: ${JSON.stringify(granted)}`);
+            }
+        },
+    );
+};
+
 module.exports = {
     getClient,
+    publishMessage,
+    subscribeTopic,
 };

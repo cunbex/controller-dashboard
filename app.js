@@ -10,7 +10,7 @@ require('dotenv').config();
 const errorHandler = require('./middleware/errorHandler');
 const { mqttConnect } = require('./controller/mqttController');
 const { mqttEvents } = require('./controller/mqttController');
-const { nobleTest } = require('./controller/nobleTest');
+/* const { valueTest } = require('./controller/valueTest'); */
 
 // import routes
 const indexRouter = require('./routes/index');
