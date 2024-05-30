@@ -157,11 +157,11 @@ function readCharacteristic(characteristic) {
             console.error('Error reading characteristic:', error);
         } else if (data) {
             try {
-                const value = data.toString('utf-8');
+                const dataResult = data.toString();
                 console.log(
                     'Read characteristic value for',
                     `${characteristic.uuid}:`,
-                    value,
+                    dataResult,
                 );
                 const device = devicesToConnect.find(
                     (obj) =>
@@ -181,7 +181,7 @@ function readCharacteristic(characteristic) {
                             characteristics: {
                                 name: charName,
                                 uuid: characteristic.uuid,
-                                value,
+                                value: dataResult,
                             },
                         },
                     );
@@ -196,7 +196,7 @@ function readCharacteristic(characteristic) {
                             characteristic: {
                                 name: charName,
                                 uuid: characteristic.uuid,
-                                value,
+                                value: dataResult,
                             },
                         },
                     );

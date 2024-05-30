@@ -6,14 +6,17 @@ async function startScan() {
     return scanResult;
 }
 async function connectDevice(deviceId) {
-    let connectResult = await fetch('http://localhost:3000/api/connectDevice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            deviceId,
-        }),
-    });
-    connectResult = await connectResult.json();
+    const connectResponse = await fetch(
+        'http://localhost:3000/api/connectDevice',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                deviceId,
+            }),
+        },
+    );
+    const connectResult = await connectResponse.json();
     if (connectResult.status === 200 && connectResult.success) {
         document.querySelector(`#${deviceId}`).style.backgroundColor = 'green';
         alert(connectResult.message);
