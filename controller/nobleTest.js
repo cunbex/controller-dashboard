@@ -10,70 +10,85 @@ const baseCharacteristics = [
     { uuid: 4441, characteristicName: 'status' },
     { uuid: 4442, characteristicName: 'consommationGaz' },
 ];
-exports.startScan = () => {
-    noble.on('stateChange', (state) => {
-        if (state === 'poweredOn') {
-            console.log('Bluetooth is active, starting scan...');
-            noble.startScanning();
-            setTimeout(() => {
-                console.log('Scan finished.');
+
+exports.startScan = () =>
+    new Promise((resolve, reject) => {
+        noble.on('stateChange', (state) => {
+            if (state === 'poweredOn') {
+                console.log('Bluetooth is active, starting scan...');
+                noble.startScanning();
+                setTimeout(() => {
+                    console.log('Scan finished.');
+                    noble.stopScanning();
+                }, 4000);
+            } else {
+                console.log('Bluetooth is not active');
                 noble.stopScanning();
-            }, 4000);
-        } else {
-            console.log('Bluetooth is not active');
-            noble.stopScanning();
-            return 'Bluetooth is not active';
-        }
-    });
-    noble.on('discover', (peripheral) => {
-        console.log('Scanning for BLE devices...');
-        if (peripheral.advertisement.localName !== undefined) {
-            const exists = devicesToConnect.some(
-                (obj) => obj.peripheral.uuid === peripheral.uuid,
-            );
-            if (!exists) {
-                devicesToConnect.push({
-                    peripheral,
-                    isConnected: false,
-                });
+                reject('Bluetooth is not active');
             }
-        }
-    });
-    noble.on('scanStop', () => {
-        if (devicesToConnect.length !== 0) {
-            const frontDevicesToConnect = [];
-            for (let i = 0; i < devicesToConnect.length; i++) {
-                frontDevicesToConnect.push({
-                    uuid: devicesToConnect[i].peripheral.uuid,
-                    localName:
-                        devicesToConnect[i].peripheral.advertisement.localName,
-                });
+        });
+        noble.on('discover', (peripheral) => {
+            console.log('Scanning for BLE devices...');
+            if (peripheral.advertisement.localName !== undefined) {
+                const exists = devicesToConnect.some(
+                    (obj) => obj.peripheral.uuid === peripheral.uuid,
+                );
+                if (!exists) {
+                    devicesToConnect.push({
+                        peripheral,
+                        isConnected: false,
+                    });
+                }
             }
-            return frontDevicesToConnect;
-        }
+        });
+        noble.on('scanStop', () => {
+            if (devicesToConnect.length !== 0) {
+                const frontDevicesToConnect = [];
+                for (let i = 0; i < devicesToConnect.length; i++) {
+                    frontDevicesToConnect.push({
+                        uuid: devicesToConnect[i].peripheral.uuid,
+                        localName:
+                            devicesToConnect[i].peripheral.advertisement
+                                .localName,
+                    });
+                }
+                resolve(frontDevicesToConnect);
+            }
+        });
+
+        noble.on('error', (err) => {
+            console.error('Error occurred:', err);
+            reject(err);
+        });
     });
 
-    noble.on('error', (err) => {
-        console.error('Error occurred:', err);
-        return err;
-    });
-};
-
-exports.connectToDevice = (uuid) => {
+exports.connectToDevice = async (uuid) => {
     const device = devicesToConnect.find((obj) => obj.peripheral.uuid === uuid);
     if (!device) {
         console.error('Device to connect not found');
-        return;
+        return {
+            success: false,
+            status: 400,
+            message: 'Device to connect not found',
+        };
     }
     if (device.isConnected) {
         console.error('Device already connected');
-        return;
+        return {
+            success: false,
+            status: 200,
+            message: 'Device already connected',
+        };
     }
     const selectedDevice = device.peripheral;
     selectedDevice.connect((error) => {
         if (error) {
             console.error('Error connecting to peripheral:', error);
-            return;
+            return {
+                success: false,
+                status: 400,
+                message: 'Error connecting to peripheral',
+            };
         }
         console.log(
             'Connected to peripheral:',
@@ -83,6 +98,11 @@ exports.connectToDevice = (uuid) => {
         );
         device.isConnected = true;
         discoverServicesAndCharacteristics(device);
+        return {
+            success: true,
+            status: 200,
+            message: `Connected to peripheral: ${selectedDevice.advertisement.localName}`,
+        };
     });
 };
 function discoverServicesAndCharacteristics(device) {

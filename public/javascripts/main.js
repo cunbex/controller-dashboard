@@ -1,3 +1,31 @@
+async function startScan() {
+    const responseScan = await fetch('http://localhost:3000/api/startScan', {
+        method: 'GET',
+    });
+    const scanResult = await responseScan.json();
+    return scanResult;
+}
+async function connectDevice(deviceId) {
+    let connectResult = await fetch('http://localhost:3000/api/connectDevice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            deviceId,
+        }),
+    });
+    connectResult = await connectResult.json();
+    if (connectResult.status === 200 && connectResult.success) {
+        document.querySelector(`#${deviceId}`).style.backgroundColor = 'green';
+        alert(connectResult.message);
+    } else if (connectResult.status === 200 && !connectResult) {
+        document.querySelector(`#${deviceId}`).style.backgroundColor = 'blue';
+        alert(connectResult.message);
+    } else if (connectResult.status === 400 && !connectResult) {
+        document.querySelector(`#${deviceId}`).style.backgroundColor = 'red';
+        alert(connectResult.message);
+    }
+}
+
 if (document.querySelector('#logInButton')) {
     document
         .querySelector('#logInButton')
@@ -22,14 +50,34 @@ if (document.querySelector('#startScan')) {
         .querySelector('#startScan')
         .addEventListener('click', async (event) => {
             event.preventDefault();
-            const response = await fetch(
-                'http://localhost:3000/api/startScan',
-                {
-                    method: 'GET',
-                },
-            );
-            const data = await response.json();
-            console.log(data);
+            const scanResult = await startScan();
+            // Get the ul element
+            const ul = document.querySelector('.scanResult');
+            scanResult.message.forEach((element) => {
+                // Create a new li element
+                const li = document.createElement('li');
+
+                // Create a new p element and set its text content
+                const p = document.createElement('p');
+                p.textContent = element.localName;
+
+                // Create a new button element and set its text content
+                const button = document.createElement('button');
+                button.textContent = 'Connect';
+                button.id = element.uuid;
+
+                button.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    connectDevice(button.id);
+                });
+
+                // Append the p and button elements to the li
+                li.appendChild(p);
+                li.appendChild(button);
+
+                // Append the li to the ul
+                ul.appendChild(li);
+            });
         });
 }
 

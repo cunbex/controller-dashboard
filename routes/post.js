@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const express = require('express');
 const { startScan } = require('../controller/nobleTest');
+const { connectToDevice } = require('../controller/nobleTest');
 
 const router = express.Router();
 
@@ -18,13 +19,33 @@ router.post(
         }
     }),
 );
+// Post connect
+router.post(
+    '/connectDevice',
+    asyncHandler(async (req, res, next) => {
+        if (req.session.isAuthenticated) {
+            const connectResult = await connectToDevice(req.body.deviceId);
+            res.json(connectResult);
+        }
+    }),
+);
 // GET start scan
 router.get(
     '/startScan',
     asyncHandler(async (req, res, next) => {
         if (req.session.isAuthenticated) {
-            const result = startScan();
-            console.log(result);
+            const devices = startScan();
+            devices
+                .then((result) => {
+                    res.status(200).json({
+                        success: true,
+                        status: 200,
+                        message: result,
+                    });
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
         }
     }),
 );
