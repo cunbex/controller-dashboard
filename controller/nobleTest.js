@@ -136,11 +136,6 @@ function discoverServicesAndCharacteristics(device) {
                     });
                     characteristic.on('data', (data, isNotification) => {
                         if (isNotification) {
-                            console.log(
-                                'Characteristic value changed for',
-                                `${characteristic.uuid}:`,
-                                data.toString('utf-8'),
-                            );
                             readCharacteristic(characteristic);
                         }
                     });
@@ -152,65 +147,56 @@ function discoverServicesAndCharacteristics(device) {
 }
 
 function readCharacteristic(characteristic) {
+    let dataResult;
     characteristic.read((error, data) => {
         if (error) {
             console.error('Error reading characteristic:', error);
         } else if (data) {
             try {
-                const dataResult = data.toString();
+                dataResult = data.toString('utf-8');
                 console.log(
                     'Read characteristic value for',
                     `${characteristic.uuid}:`,
                     dataResult,
                 );
-                const device = devicesToConnect.find(
-                    (obj) =>
-                        obj.peripheral.uuid === characteristic._peripheralId,
-                );
-                const charName = baseCharacteristics.find(
-                    (item) => item.uuid === characteristic.uuid,
-                );
-                if (characteristic.uuid === 4441) {
-                    publishMessage(
-                        'cmd',
-                        `${device.peripheral.advertisement.localName}`,
-                        {
-                            controller: process.env.CONTROLLER_ID,
-                            type: 'cmd',
-                            device: `${device.peripheral.advertisement.localName}`,
-                            characteristics: {
-                                name: charName,
-                                uuid: characteristic.uuid,
-                                value: dataResult,
-                            },
-                        },
-                    );
-                } else {
-                    publishMessage(
-                        'vlr',
-                        `${device.peripheral.advertisement.localName}`,
-                        {
-                            controller: process.env.CONTROLLER_ID,
-                            type: 'vlr',
-                            deviceName: `${device.peripheral.advertisement.localName}`,
-                            characteristic: {
-                                name: charName,
-                                uuid: characteristic.uuid,
-                                value: dataResult,
-                            },
-                        },
-                    );
-                }
             } catch (e) {
                 console.error('Error converting data to string:', e);
             }
-        } else {
-            console.log(
-                'No data received for characteristic:',
-                characteristic.uuid,
-            );
         }
     });
+    const device = devicesToConnect.find(
+        (obj) => obj.peripheral.uuid === characteristic._peripheralId,
+    );
+    const charName = baseCharacteristics.find(
+        (item) => item.uuid === characteristic.uuid,
+    );
+    if (characteristic.uuid === 4441) {
+        console.log('hi');
+        console.log(publishMessage);
+        publishMessage('cmd', `${device.peripheral.advertisement.localName}`, {
+            controller: process.env.CONTROLLER_ID,
+            type: 'cmd',
+            deviceName: `${device.peripheral.advertisement.localName}`,
+            characteristics: {
+                name: charName,
+                uuid: characteristic.uuid,
+                value: dataResult,
+            },
+        });
+    } else {
+        console.log('hi');
+        console.log(publishMessage);
+        publishMessage('vlr', `${device.peripheral.advertisement.localName}`, {
+            controller: process.env.CONTROLLER_ID,
+            type: 'vlr',
+            deviceName: `${device.peripheral.advertisement.localName}`,
+            characteristic: {
+                name: charName,
+                uuid: characteristic.uuid,
+                value: dataResult,
+            },
+        });
+    }
 }
 
 /* IMPLIMENT WRITE */

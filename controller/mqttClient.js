@@ -1,6 +1,5 @@
 const mqtt = require('mqtt');
 const fs = require('fs');
-const { writeCharacteristic } = require('./nobleTest');
 
 // MQTT broker URL
 const brokerUrl = process.env.BROKER_URL;
