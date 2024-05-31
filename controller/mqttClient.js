@@ -1,6 +1,6 @@
 const mqtt = require('mqtt');
 const fs = require('fs');
-
+const { writeCharacteristic } = require('./noble');
 // MQTT broker URL
 const brokerUrl = process.env.BROKER_URL;
 
@@ -27,32 +27,6 @@ const options = {
     clean: false,
     ca,
 };
-
-async function getClient() {
-    if (!client) {
-        client = mqtt.connect(brokerUrl, options);
-
-        // Connection Event handlers
-        client.on('connect', () => {
-            console.log('Connected to MQTT broker');
-        });
-        client.on('reconnect', () => {
-            console.log('Reconnecting...');
-        });
-        client.on('close', () => {
-            console.log('Disconnected...');
-        });
-        client.on('error', (err) => {
-            console.error('MQTT client error:', err);
-        });
-        client.on('message', (topic, message) => {
-            console.log(`Received: ${message.toString()}`);
-            /* writeCharacteristic(JSON.parse(message.toString())); */
-        });
-        await subscribeTopic();
-    }
-    return client;
-}
 
 const publishOptions = {
     qos: 1,
@@ -98,6 +72,32 @@ const subscribeTopic = async () => {
         },
     );
 };
+
+async function getClient() {
+    if (!client) {
+        client = mqtt.connect(brokerUrl, options);
+
+        // Connection Event handlers
+        client.on('connect', () => {
+            console.log('Connected to MQTT broker');
+        });
+        client.on('reconnect', () => {
+            console.log('Reconnecting...');
+        });
+        client.on('close', () => {
+            console.log('Disconnected...');
+        });
+        client.on('error', (err) => {
+            console.error('MQTT client error:', err);
+        });
+        client.on('message', async (topic, message) => {
+            console.log(`Received: ${message.toString()}`);
+            await writeCharacteristic(JSON.parse(message.toString()));
+        });
+        await subscribeTopic();
+    }
+    return client;
+}
 
 module.exports = {
     getClient,

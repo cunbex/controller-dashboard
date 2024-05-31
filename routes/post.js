@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const express = require('express');
-const { startScan } = require('../controller/nobleTest');
-const { connectToDevice } = require('../controller/nobleTest');
+const { startScan } = require('../controller/noble');
+const { connectToDevice } = require('../controller/noble');
 
 const router = express.Router();
 

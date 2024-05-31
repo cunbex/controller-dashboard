@@ -1,7 +1,5 @@
 const noble = require('@abandonware/noble');
-const { publishMessage } = require('./mqttClient');
 
-console.log(publishMessage);
 // eslint-disable-next-line prefer-const
 let devicesToConnect = [];
 const baseCharacteristics = [
@@ -148,11 +146,12 @@ function discoverServicesAndCharacteristics(device) {
 }
 
 function readCharacteristic(characteristic) {
-    characteristic.read((error, data) => {
+    characteristic.read(async (error, data) => {
         if (error) {
             console.error('Error reading characteristic:', error);
         } else if (data) {
             try {
+                const { publishMessage } = require('./mqttClient');
                 const dataResult = data.toString('utf-8');
                 console.log(
                     'Read characteristic value for',
@@ -164,11 +163,10 @@ function readCharacteristic(characteristic) {
                         obj.peripheral.uuid === characteristic._peripheralId,
                 );
                 const charName = baseCharacteristics.find(
-                    (item) => item.uuid === characteristic.uuid,
+                    (item) => item.uuid == characteristic.uuid,
                 );
                 if (characteristic.uuid === 4441) {
-                    console.log(publishMessage);
-                    publishMessage(
+                    await publishMessage(
                         'cmd',
                         `${device.peripheral.advertisement.localName}`,
                         {
@@ -176,15 +174,14 @@ function readCharacteristic(characteristic) {
                             type: 'cmd',
                             deviceName: `${device.peripheral.advertisement.localName}`,
                             characteristics: {
-                                name: charName,
+                                name: charName.characteristicName,
                                 uuid: characteristic.uuid,
                                 value: dataResult,
                             },
                         },
                     );
                 } else {
-                    console.log(publishMessage);
-                    publishMessage(
+                    await publishMessage(
                         'vlr',
                         `${device.peripheral.advertisement.localName}`,
                         {
@@ -192,7 +189,7 @@ function readCharacteristic(characteristic) {
                             type: 'vlr',
                             deviceName: `${device.peripheral.advertisement.localName}`,
                             characteristic: {
-                                name: charName,
+                                name: charName.characteristicName,
                                 uuid: characteristic.uuid,
                                 value: dataResult,
                             },
@@ -213,14 +210,26 @@ function readCharacteristic(characteristic) {
 
 /* IMPLIMENT WRITE */
 exports.writeCharacteristic = async (data) => {
-    const characteristic = devicesToConnect.characteristics.find(
-        (obj) => obj.uuid === data.characteristic.uuid,
-    );
-    characteristic.write(data.characteristic.value, true, (error) => {
-        if (error) {
-            console.error('Error writing to characteristic:', error);
-        } else {
-            console.log('Write successful');
+    const foundCharacteristic = devicesToConnect.reduce((acc, device) => {
+        const chara = device.characteristics.find(
+            (char) => char.uuid == data.characteristic.uuid,
+        );
+        if (chara && device.isConnected) {
+            acc = chara;
         }
-    });
+        return acc;
+    }, null);
+    if (foundCharacteristic) {
+        foundCharacteristic.write(
+            Buffer.from(data.characteristic.value, 'utf-8'),
+            true,
+            (error) => {
+                if (error) {
+                    console.error('Error writing to characteristic:', error);
+                } else {
+                    console.log('Write successful');
+                }
+            },
+        );
+    }
 };
