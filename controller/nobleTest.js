@@ -152,55 +152,55 @@ function readCharacteristic(characteristic) {
         if (error) {
             console.error('Error reading characteristic:', error);
         } else if (data) {
-            let dataResult;
             try {
-                dataResult = data.toString('utf-8');
+                const dataResult = data.toString('utf-8');
                 console.log(
                     'Read characteristic value for',
                     `${characteristic.uuid}:`,
                     dataResult,
                 );
+                const device = devicesToConnect.find(
+                    (obj) =>
+                        obj.peripheral.uuid === characteristic._peripheralId,
+                );
+                const charName = baseCharacteristics.find(
+                    (item) => item.uuid === characteristic.uuid,
+                );
+                if (characteristic.uuid === 4441) {
+                    console.log(publishMessage);
+                    publishMessage(
+                        'cmd',
+                        `${device.peripheral.advertisement.localName}`,
+                        {
+                            controller: process.env.CONTROLLER_ID,
+                            type: 'cmd',
+                            deviceName: `${device.peripheral.advertisement.localName}`,
+                            characteristics: {
+                                name: charName,
+                                uuid: characteristic.uuid,
+                                value: dataResult,
+                            },
+                        },
+                    );
+                } else {
+                    console.log(publishMessage);
+                    publishMessage(
+                        'vlr',
+                        `${device.peripheral.advertisement.localName}`,
+                        {
+                            controller: process.env.CONTROLLER_ID,
+                            type: 'vlr',
+                            deviceName: `${device.peripheral.advertisement.localName}`,
+                            characteristic: {
+                                name: charName,
+                                uuid: characteristic.uuid,
+                                value: dataResult,
+                            },
+                        },
+                    );
+                }
             } catch (e) {
                 console.error('Error converting data to string:', e);
-            }
-            const device = devicesToConnect.find(
-                (obj) => obj.peripheral.uuid === characteristic._peripheralId,
-            );
-            const charName = baseCharacteristics.find(
-                (item) => item.uuid === characteristic.uuid,
-            );
-            if (characteristic.uuid === 4441) {
-                console.log(publishMessage);
-                publishMessage(
-                    'cmd',
-                    `${device.peripheral.advertisement.localName}`,
-                    {
-                        controller: process.env.CONTROLLER_ID,
-                        type: 'cmd',
-                        deviceName: `${device.peripheral.advertisement.localName}`,
-                        characteristics: {
-                            name: charName,
-                            uuid: characteristic.uuid,
-                            value: dataResult,
-                        },
-                    },
-                );
-            } else {
-                console.log(publishMessage);
-                publishMessage(
-                    'vlr',
-                    `${device.peripheral.advertisement.localName}`,
-                    {
-                        controller: process.env.CONTROLLER_ID,
-                        type: 'vlr',
-                        deviceName: `${device.peripheral.advertisement.localName}`,
-                        characteristic: {
-                            name: charName,
-                            uuid: characteristic.uuid,
-                            value: dataResult,
-                        },
-                    },
-                );
             }
         } else {
             console.log(
