@@ -210,12 +210,26 @@ function readCharacteristic(characteristic) {
 
 /* IMPLIMENT WRITE */
 exports.writeCharacteristic = async (data) => {
+    console.log(
+        'Before reduce devicesToConnect:',
+        JSON.stringify(devicesToConnect, null, 2),
+    );
+
     const foundCharacteristic = devicesToConnect.reduce((acc, device) => {
-        const chara = device.characteristics.find(
-            (char) => char.uuid == data.characteristic.uuid,
-        );
-        if (chara && device.isConnected) {
-            acc = chara;
+        if (device.isConnected) {
+            console.log(
+                'Inside reduce devicesToConnect:',
+                JSON.stringify(devicesToConnect, null, 2),
+            );
+            const chara = device.characteristics.find(
+                (char) => char.uuid == data.characteristic.uuid,
+            );
+            if (chara) {
+                console.log(
+                    `Found characteristic ${chara.uuid} in device ${device.peripheral.uuid}`,
+                );
+                acc = chara;
+            }
         }
         return acc;
     }, null);
